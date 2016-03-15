@@ -1,0 +1,52 @@
+<div class="wrapper">
+  <style>
+   .mapillary-js {
+       position: relative;
+       width: 100%;
+       height: auto;
+       padding-bottom: 75%;
+   }
+
+   .mapillary-js canvas {
+       position: absolute;
+       top: 0;
+       right: 0;
+       bottom: 0;
+       left: 0;
+   }
+
+   .hide-viewer-content #mly {
+       display: none;
+   }
+
+   .Notice {
+       display: none;
+   }
+
+   .hide-viewer-content .Notice {
+       display: block;
+   }
+
+  </style>
+
+  <div class"mly-wrapper">
+    <div id="mly"></div>
+
+    <p class="Notice block black bg-yellow h6 p1 center">Click on the map to display the location</p>
+  </div>
+  <div>
+    <div data-dojo-type="dijit/form/DropDownButton">
+      <span>Settings</span>
+      <div id="ttDialog"
+           class="h6"
+           data-dojo-type="dijit/TooltipDialog">
+        <div id="mapillarysequences" data-dojo-type="dijit/form/CheckBox"></div>
+        <label for="mapillarysequences">Display Mapillary photo layer</label>
+        <br>
+        <button id="save"
+                data-dojo-type="dijit/form/Button"
+                type="submit">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
