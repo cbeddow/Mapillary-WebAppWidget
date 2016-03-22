@@ -1,6 +1,8 @@
 /* globals dojo, define, esri, Point */
 
-define(['dojo/_base/declare',
+define([
+        'esri/geometry/Point',
+        'dojo/_base/declare',
         'dojo/_base/lang',
         'jimu/BaseWidget',
         'esri/geometry/Extent',
@@ -19,7 +21,9 @@ define(['dojo/_base/declare',
         'dojo/dom',
         'dojo/on'
        ],
-       function (declare,
+       function (
+                 Point,
+                 declare,
                  lang,
                  BaseWidget,
                  Extent,
@@ -100,7 +104,7 @@ define(['dojo/_base/declare',
              this.map.graphics.clear()
              this.toggleViewerVisibility(true)
 
-             var pt = new esri.geometry.Point(lon, lat, new esri.SpatialReference({ 'wkid': 4326 }))
+             var pt = new Point(lon, lat, new esri.SpatialReference({ 'wkid': 4326 }))
              this.map.graphics.add(new esri.Graphic(
                esri.geometry.geographicToWebMercator(pt),
                new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_DIAMOND, 10),
@@ -123,7 +127,7 @@ define(['dojo/_base/declare',
              var s = 'mapillarysequences'
              this.map
                .addLayer(new VectorTileLayer(
-                 '/widgets/Mapillary/sequence_tiles.json',
+                 'widgets/Mapillary-WebAppWidget/sequence_tiles.json',
                  { id: s}
                ))
 
