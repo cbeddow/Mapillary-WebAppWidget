@@ -1,186 +1,149 @@
-/* globals dojo, define, esri, Point */
 
 define([
-        'esri/geometry/Point',
-        'dojo/_base/declare',
-        'dojo/_base/lang',
-        'jimu/BaseWidget',
-        'esri/geometry/Extent',
-        'esri/SpatialReference',
-        './mapillary-js.min',
-        'esri/layers/VectorTileLayer',
-        'esri/geometry/webMercatorUtils',
-        'esri/geometry/screenUtils',
-        'jimu/LayerInfos/LayerInfos',
-        './ramda.min',
-        'dojo/parser',
-        'dijit/TooltipDialog',
-        'dijit/form/CheckBox',
-        'dijit/form/Button',
-        'dijit/form/DropDownButton',
-        'dojo/dom',
-        'dojo/on'
-       ],
-       function (
-                 Point,
-                 declare,
-                 lang,
-                 BaseWidget,
-                 Extent,
-                 SpatialReference,
-                 Mapillary,
-                 VectorTileLayer,
-                 webMercatorUtils,
-                 screenUtils,
-                 LayerInfos,
-                 R,
-                 parser,
-                 TooltipDialog,
-                 CheckBox,
-                 Button,
-                 DropDownButton,
-                 dom,
-                 on) {
-         return declare([BaseWidget], {
+    './widgets/Mapillary/mapillary-js.min.js',
+    'esri/layers/VectorTileLayer',
+    'esri/graphic',
+    'esri/SpatialReference',
+    'esri/symbols/SimpleMarkerSymbol',
+    'esri/InfoTemplate',
+    'esri/geometry/Point',
+    'esri/geometry/webMercatorUtils',
+    'dojo/_base/declare', 
+    'dojo/dom',
+    'dojo/on',
+    'jimu/BaseWidget',
+],
+function(Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSymbol, InfoTemplate, Point, webMercatorUtils, declare, dom, on, BaseWidget) {
+  //To create a widget, you need to derive from BaseWidget.
+  return declare([BaseWidget], {
 
-           baseClass: 'jimu-widget-mapillary',
+    // Custom widget code goes here
 
-           /* *********
-            * Widget
-            * *********/
+    baseClass: 'mapillary',
+    // this property is set by the framework when widget is loaded.
+    // name: 'Mapillary',
+    // add additional properties here
 
-           startup: function () {
-             // parse templates
-             parser.parse()
+    //methods to communication with app container:
+    postCreate: function() {
+      this.inherited(arguments);
+      console.log('Mapillary::postCreate');
+    },
 
-             // Bootstrap Mapillary
-             this.mapillary = new Mapillary
-               .Viewer('mly',
+    startup: function() {
+      this.inherited(arguments);
+      console.log('Mapillary::startup');
+      
+
+      this.mapillary = new Mapillary.Viewer('mly',
                        'cjJ1SUtVOEMtdy11b21JM0tyYTZIQTpiNjQ0MTgzNTIzZGM2Mjhl',
                        null,
                        {
                          cover: false,
                          detection: true
-                       })
+                       });
 
-             this.parentEl = this.mapillary._container.element.parentElement
+        // Hide Mappilary viewer
+        this.parentEl = this.mapillary._container.element.parentElement;
+        this.toggleViewerVisibility(false);
 
-             this.toggleViewerVisibility(false)
+        var layer = new VectorTileLayer(
+          'widgets/Mapillary/sequence-tiles.json',
+          { id: 'mapillarysequences'}
+        );
+       
+        this.map.addLayer(layer);
 
-             this.attachHooks({'nodechanged': this.onNodeChanged.bind(this)},
-                              this.mapillary)
+        var that = this;
 
-             // FML
-             var that = this
+        //TODO: if default...
+        console.log('defaultCoverage = ',this.config.defaultCoverage);
+        
+        dom.byId('mapillarysequences').checked = this.config.defaultCoverage;
+        layer.setVisibility(this.config.defaultCoverage);
+        
+        // Bind event to map click
+        this.map.on('click',function (event) {
+          var mp = webMercatorUtils.webMercatorToGeographic(event.mapPoint)
+          that.mapillary.moveCloseTo(mp.y, mp.x)
+        });
 
-             on(dom.byId('save'), 'click', function (evt) {
-               var mapillarysequences = dom.byId('mapillarysequences')
+        this.mapillary.on('nodechanged', this.onNodeChanged.bind(this));
 
-               that.applySettings({
-                 mapillarysequences: mapillarysequences.checked
-               })
-             })
+        
+        on(dom.byId('mapillarysequences'), 'change', function (evt) {
+          var mapillarysequences = dom.byId('mapillarysequences');
 
-             // Bootstrap Map with Mapillary Layers
-             this.addLayers()
+          if(mapillarysequences.checked){
+            layer.setVisibility(true);
+          }else{
+            layer.setVisibility(false);
+          }
+       });
 
-             this.attachHooks({
-               'click': this.onMapClick.bind(this),
-               'update-end': this.onMapUpdateEnd.bind(this)
-             }, this.map)
-             // End of startup
-           },
+    },
 
-           /* *********
-            * Mapillary
-            * *********/
+    // onOpen: function(){
+    //   console.log('Mapillary::onOpen');
+    // },
 
-           // Handles `onnodechanged` event
-           onNodeChanged: function (node) {
-             var lon = node.latLon.lon
-             var lat = node.latLon.lat
-             var diff = 0.001
+    // onClose: function(){
+    //   console.log('Mapillary::onClose');
+    // },
 
-             this.map.graphics.clear()
-             this.toggleViewerVisibility(true)
+    // onMinimize: function(){
+    //   console.log('Mapillary::onMinimize');
+    // },
 
-             var pt = new Point(lon, lat, new esri.SpatialReference({ 'wkid': 4326 }))
-             this.map.graphics.add(new esri.Graphic(
-               esri.geometry.geographicToWebMercator(pt),
-               new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_DIAMOND, 10),
-               { 'title': node.latLon.lon + ' ' + node.latLon.lat, 'content': 'A Mapillary Node' },
-               new esri.InfoTemplate('${title}', '${content}')
-             ))
+    // onMaximize: function(){
+    //   console.log('Mapillary::onMaximize');
+    // },
 
-             // this.map.setExtent(new Extent(lon - diff, lat - diff, lon + diff, lat + diff, new SpatialReference({ wkid: 4326 })))
+    // onSignIn: function(credential){
+    //   console.log('Mapillary::onSignIn', credential);
+    // },
 
-             var screenOffsets = screenUtils.toScreenPoint(this.map.extent, this.map.width, this.map.height, pt)
+    // onSignOut: function(){
+    //   console.log('Mapillary::onSignOut');
+    // }
 
-             var p = new Point(screenOffsets.x, screenOffsets.y)
-           },
+    // onPositionChange: function(){
+    //   console.log('Mapillary::onPositionChange');
+    // },
 
-           /* **********
-            * Map
-            * *********/
+    // resize: function(){
+    //   console.log('Mapillary::resize');
+    // }
 
-           addLayers: function () {
-             var s = 'mapillarysequences'
-             this.map
-               .addLayer(new VectorTileLayer(
-                 'widgets/Mapillary-WebAppWidget/sequence_tiles.json',
-                 { id: s}
-               ))
+    //methods to communication between widgets:
+    toggleViewerVisibility: function (val) {
+      var klaz = 'hide-viewer-content'
 
-             var ls = this.map.getLayer(s)
-             ls.on('load', function () {
-               ls.gl.style._layers[s].layout.visibility = 'none'
-               ls.gl.refresh()
-             })
-           },
+      if (val) {
+        this.parentEl.classList.remove(klaz)
+      } else {
+        this.parentEl.classList.add(klaz)
+      }
+    },
 
-           onMapClick: function (event) {
-             var mp = webMercatorUtils.webMercatorToGeographic(event.mapPoint)
-             this.mapillary.moveCloseTo(mp.y, mp.x)
-           },
+    onNodeChanged: function (node) {
+       var lon = node.latLon.lon;
+       var lat = node.latLon.lat;
+       var diff = 0.001;
 
-           onMapUpdateEnd: function (event) {},
+       this.map.graphics.clear();
+       this.toggleViewerVisibility(true);
 
-           applySettings: function (settings) {
-             function applyLayerVisibility (layerPair) {
-               var layer = this.map.getLayer(layerPair[0])
-               if (layerPair[1]) {
-                 layer.gl.style._layers[layerPair[0]].layout.visibility = 'visible'
-               } else {
-                 layer.gl.style._layers[layerPair[0]].layout.visibility = 'none'
-               }
-             }
+       var pt = new Point(lon, lat, new SpatialReference({ 'wkid': 4326 }));
+       
+       this.map.graphics.add(new Graphic(
+         webMercatorUtils.geographicToWebMercator(pt),
+         new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_DIAMOND, 10),
+         { 'title': lon + ' ' + lat, 'content': 'A Mapillary Node' },
+         new InfoTemplate('${title}', '${content}')
+       ));
+     },
 
-             R.toPairs(settings).forEach(applyLayerVisibility.bind(this))
-           },
+  });
 
-           /* **********
-            * Utils
-            * **********/
-
-           // Cleaner way of hooking into events for Mapillary, Map, etc.
-           attachHooks: function (hooks, context) {
-             function attachListener (keyValuePair) {
-               context.on(keyValuePair[0], keyValuePair[1])
-             }
-
-             R.toPairs(hooks).forEach(attachListener)
-
-             return true
-           },
-
-           toggleViewerVisibility: function (val) {
-             var klaz = 'hide-viewer-content'
-
-             if (val) {
-               this.parentEl.classList.remove(klaz)
-             } else {
-               this.parentEl.classList.add(klaz)
-             }
-           }
-         })
-       })
+});
