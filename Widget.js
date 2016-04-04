@@ -73,12 +73,7 @@ function(Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSymb
         
         on(dom.byId('mapillarysequences'), 'change', function (evt) {
           var mapillarysequences = dom.byId('mapillarysequences');
-
-          if(mapillarysequences.checked){
-            layer.setVisibility(true);
-          }else{
-            layer.setVisibility(false);
-          }
+          layer.setVisibility(mapillarysequences.checked);
        });
 
     },
