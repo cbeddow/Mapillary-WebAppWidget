@@ -5,7 +5,8 @@
             "tiles": [
                 "https://d2munx5tg0hw47.cloudfront.net/tiles/{z}/{x}/{y}.mapbox"
             ],
-            "type": "vector"
+            "type": "vector",
+            "minzoom": 0
         }
     },
     "layers": [{
@@ -14,9 +15,11 @@
         "source": "mapillary",
         "source-layer": "mapillary-sequences",
         "interactive": true,
+        "minzoom": 0,
         "layout": {
             "line-join": "round",
-            "line-cap":  "round"
+            "line-cap":  "round",
+            "visibility": "visible"
         },
         "paint": {
             "line-opacity": 0.6,
