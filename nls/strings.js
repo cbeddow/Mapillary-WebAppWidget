@@ -1,3 +1,4 @@
+/* globals define */
 define({
   root: {
     widgetTitle: 'Mapillary',
@@ -5,4 +6,4 @@ define({
   }
   // add supported locales below:
   // , "zh-cn": true
-});
+})
