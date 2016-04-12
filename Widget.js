@@ -1,4 +1,4 @@
-/* globals define */
+/* globals define, esri */
 define([
   './widgets/Mapillary/mapillary-js.min.js',
   'esri/layers/VectorTileLayer',
@@ -11,9 +11,11 @@ define([
   'dojo/_base/declare',
   'dojo/dom',
   'dojo/on',
-  'jimu/BaseWidget'
+  'jimu/BaseWidget',
+  'esri/Color',
+  'esri/symbols/SimpleLineSymbol'
 ],
-function (Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSymbol, InfoTemplate, Point, webMercatorUtils, declare, dom, on, BaseWidget) {
+function (Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSymbol, InfoTemplate, Point, webMercatorUtils, declare, dom, on, BaseWidget, Color, SimpleLineSymbol) {
   // To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
 
@@ -129,9 +131,17 @@ function (Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSym
 
       var pt = new Point(lon, lat, new SpatialReference({ 'wkid': 4326 }))
 
+      var marker = new esri.symbol.SimpleMarkerSymbol(
+        esri.symbol.SimpleMarkerSymbol.STYLE_CIRCLE,
+        20,
+        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                             new Color([255, 255, 255]),
+                             3),
+        new Color([255, 134, 27]))
+
       this.map.graphics.add(new Graphic(
         webMercatorUtils.geographicToWebMercator(pt),
-        new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_DIAMOND, 10),
+        marker,
         { 'title': lon + ' ' + lat, 'content': 'A Mapillary Node' },
         new InfoTemplate('${title}', '${content}')
       ))
