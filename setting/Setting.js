@@ -14,12 +14,14 @@ function (declare, BaseWidgetSetting) {
 
     setConfig: function (config) {
       this.defaultCoverage.checked = config.defaultCoverage
+      this.clientId.value = config.clientId ? config.clientId : ''
     },
 
     getConfig: function () {
       // WAB will get config object through this method
       return {
-        defaultCoverage: this.defaultCoverage.checked
+        defaultCoverage: this.defaultCoverage.checked,
+        clientId: this.clientId.value
       }
     }
   })

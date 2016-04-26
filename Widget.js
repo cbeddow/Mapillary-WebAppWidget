@@ -38,7 +38,7 @@ function (Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSym
 
       this.mapillary = new Mapillary.Viewer(
         'mly',
-        'cjJ1SUtVOEMtdy11b21JM0tyYTZIQTpiNjQ0MTgzNTIzZGM2Mjhl',
+        this.config.clientId,
         null,
         {
           cover: false,
