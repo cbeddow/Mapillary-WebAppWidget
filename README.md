@@ -6,7 +6,7 @@ A [Mapillary](http://www.mapillary.com/) widget for use in [Web AppBuilder Devel
 
 ## How to install
 
-In order to have the widget available *for new apps*<sup>1</sup> built within Web AppBuilder Developer Edition you just need to copy and paste it under ```client\stemapp\widgets``` folder.
+In order to have the widget available for any app built within Web AppBuilder Developer Edition you just need to copy and paste it under ```client\stemapp\widgets``` folder.
 
 > **Important note**: keep in mind that your folder must be called **Mapillary**
 
@@ -19,7 +19,3 @@ You can [check this site](http://www.mapillary.com/solutions.html) for more info
 * All plans come with a 30-day trial
 * It's free for personal, non-profit and educational use.
 * The use of this widget is also free of charge for developing and testing purposes.
-
-## Notes
-
-1. For existing apps you need to copy & paste 
