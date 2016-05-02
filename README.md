@@ -1,6 +1,6 @@
 # Mapillary-WebAppWidget
 
-A Mapillary widget for use in [Web AppBuilder Developer Edition](https://developers.arcgis.com/web-appbuilder/). 
+A [Mapillary](http://www.mapillary.com/) widget for use in [Web AppBuilder Developer Edition](https://developers.arcgis.com/web-appbuilder/). 
 
 [Live demo](https://mapillary.github.io/Mapillary-WebAppWidget)
 
