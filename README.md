@@ -2,7 +2,7 @@
 
 A [Mapillary](http://www.mapillary.com/) widget for use in [Web AppBuilder Developer Edition](https://developers.arcgis.com/web-appbuilder/). 
 
-[Live demo](https://mapillary.github.io/Mapillary-WebAppWidget)
+[Live demo](http://mapillary.github.io/Mapillary-WebAppWidget)
 
 ## How to install
 
