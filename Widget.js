@@ -1,21 +1,42 @@
 /* globals define, esri */
 define([
   './widgets/Mapillary/mapillary-js.min.js',
-  'esri/layers/VectorTileLayer',
-  'esri/graphic',
-  'esri/SpatialReference',
-  'esri/symbols/SimpleMarkerSymbol',
-  'esri/InfoTemplate',
-  'esri/geometry/Point',
-  'esri/geometry/webMercatorUtils',
-  'dojo/_base/declare',
+
   'dojo/dom',
   'dojo/on',
-  'jimu/BaseWidget',
+  'dojo/_base/declare',
+
   'esri/Color',
-  'esri/symbols/SimpleLineSymbol'
+  'esri/geometry/Point',
+  'esri/geometry/webMercatorUtils',
+  'esri/graphic',
+  'esri/InfoTemplate',
+  'esri/layers/VectorTileLayer',
+  'esri/SpatialReference',
+  'esri/symbols/SimpleLineSymbol',
+  'esri/symbols/SimpleMarkerSymbol',
+
+  'jimu/BaseWidget'
 ],
-function (Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSymbol, InfoTemplate, Point, webMercatorUtils, declare, dom, on, BaseWidget, Color, SimpleLineSymbol) {
+function (
+  Mapillary,
+
+  dom,
+  on,
+  declare,
+
+  Color,
+  Point,
+  webMercatorUtils,
+  Graphic,
+  InfoTemplate,
+  VectorTileLayer,
+  SpatialReference,
+  SimpleLineSymbol,
+  SimpleMarkerSymbol,
+
+  BaseWidget
+) {
   // To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
 
