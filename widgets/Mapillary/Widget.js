@@ -1,5 +1,42 @@
 /* globals define, esri */
-define(['./widgets/Mapillary/mapillary-js.min.js', 'esri/layers/VectorTileLayer', 'esri/graphic', 'esri/SpatialReference', 'esri/symbols/SimpleMarkerSymbol', 'esri/InfoTemplate', 'esri/geometry/Point', 'esri/geometry/webMercatorUtils', 'dojo/_base/declare', 'dojo/dom', 'dojo/on', 'jimu/BaseWidget', 'esri/Color', 'esri/symbols/SimpleLineSymbol'], function (Mapillary, VectorTileLayer, Graphic, SpatialReference, SimpleMarkerSymbol, InfoTemplate, Point, webMercatorUtils, declare, dom, on, BaseWidget, Color, SimpleLineSymbol) {
+define([
+  './widgets/Mapillary/mapillary-js.min.js',
+
+  'dojo/dom',
+  'dojo/on',
+  'dojo/_base/declare',
+
+  'esri/Color',
+  'esri/geometry/Point',
+  'esri/geometry/webMercatorUtils',
+  'esri/graphic',
+  'esri/InfoTemplate',
+  'esri/layers/VectorTileLayer',
+  'esri/SpatialReference',
+  'esri/symbols/SimpleLineSymbol',
+  'esri/symbols/SimpleMarkerSymbol',
+
+  'jimu/BaseWidget'
+],
+function (
+  Mapillary,
+
+  dom,
+  on,
+  declare,
+
+  Color,
+  Point,
+  webMercatorUtils,
+  Graphic,
+  InfoTemplate,
+  VectorTileLayer,
+  SpatialReference,
+  SimpleLineSymbol,
+  SimpleMarkerSymbol,
+
+  BaseWidget
+) {
   // To create a widget, you need to derive from BaseWidget.
   return declare([BaseWidget], {
 
@@ -11,48 +48,53 @@ define(['./widgets/Mapillary/mapillary-js.min.js', 'esri/layers/VectorTileLayer'
     // add additional properties here
 
     // methods to communication with app container:
-    postCreate: function postCreate() {
-      this.inherited(arguments);
-      console.log('Mapillary::postCreate');
+    postCreate: function () {
+      this.inherited(arguments)
+      console.log('Mapillary::postCreate')
     },
 
-    startup: function startup() {
-      this.inherited(arguments);
-      console.log('Mapillary::startup');
+    startup: function () {
+      this.inherited(arguments)
+      console.log('Mapillary::startup')
 
-      this.mapillary = new Mapillary.Viewer('mly', this.config.clientId, null, {
-        cover: false,
-        detection: true
-      });
+      this.mapillary = new Mapillary.Viewer(
+        'mly',
+        this.config.clientId,
+        null,
+        {
+          cover: false,
+          detection: true
+        }
+      )
 
       // Hide Mappilary viewer
-      this.parentEl = this.mapillary._container.element.parentElement;
-      this.toggleViewerVisibility(false);
+      this.parentEl = this.mapillary._container.element.parentElement
+      this.toggleViewerVisibility(false)
 
-      var layer = new VectorTileLayer('widgets/Mapillary/sequence-tiles.json', { id: 'mapillarysequences' });
+      var layers = new VectorTileLayer('widgets/Mapillary/mapillary-style.json')
 
-      this.map.addLayer(layer);
+      this.map.addLayer(layers)
 
-      var that = this;
+      var that = this
 
       // TODO: if default...
-      console.log('defaultCoverage = ', this.config.defaultCoverage);
+      console.log('defaultCoverage = ', this.config.defaultCoverage)
 
-      dom.byId('mapillarysequences').checked = this.config.defaultCoverage;
-      layer.setVisibility(this.config.defaultCoverage);
+      dom.byId('mapillarysequences').checked = this.config.defaultCoverage
+      layers.setVisibility(this.config.defaultCoverage)
 
       // Bind event to map click
       this.map.on('click', function (event) {
-        var mp = webMercatorUtils.webMercatorToGeographic(event.mapPoint);
-        that.mapillary.moveCloseTo(mp.y, mp.x);
-      });
+        var mp = webMercatorUtils.webMercatorToGeographic(event.mapPoint)
+        that.mapillary.moveCloseTo(mp.y, mp.x)
+      })
 
-      this.mapillary.on('nodechanged', this.onNodeChanged.bind(this));
+      this.mapillary.on('nodechanged', this.onNodeChanged.bind(this))
 
       on(dom.byId('mapillarysequences'), 'change', function () {
-        var mapillarysequences = dom.byId('mapillarysequences');
-        layer.setVisibility(mapillarysequences.checked);
-      });
+        var mapillarysequences = dom.byId('mapillarysequences')
+        layers.setVisibility(mapillarysequences.checked)
+      })
     },
 
     // onOpen: function(){
@@ -88,29 +130,40 @@ define(['./widgets/Mapillary/mapillary-js.min.js', 'esri/layers/VectorTileLayer'
     // }
 
     // methods to communication between widgets:
-    toggleViewerVisibility: function toggleViewerVisibility(val) {
-      var klaz = 'hide-viewer-content';
+    toggleViewerVisibility: function (val) {
+      var klaz = 'hide-viewer-content'
 
       if (val) {
-        this.parentEl.classList.remove(klaz);
+        this.parentEl.classList.remove(klaz)
       } else {
-        this.parentEl.classList.add(klaz);
+        this.parentEl.classList.add(klaz)
       }
     },
 
-    onNodeChanged: function onNodeChanged(node) {
-      var lon = node.latLon.lon;
-      var lat = node.latLon.lat;
+    onNodeChanged: function (node) {
+      var lon = node.latLon.lon
+      var lat = node.latLon.lat
 
-      this.map.graphics.clear();
-      this.toggleViewerVisibility(true);
+      this.map.graphics.clear()
+      this.toggleViewerVisibility(true)
 
-      var pt = new Point(lon, lat, new SpatialReference({ 'wkid': 4326 }));
+      var pt = new Point(lon, lat, new SpatialReference({ 'wkid': 4326 }))
 
-      var marker = new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_CIRCLE, 20, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255, 255]), 3), new Color([255, 134, 27]));
+      var marker = new esri.symbol.SimpleMarkerSymbol(
+        esri.symbol.SimpleMarkerSymbol.STYLE_CIRCLE,
+        20,
+        new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID,
+                             new Color([255, 255, 255]),
+                             3),
+        new Color([255, 134, 27]))
 
-      this.map.graphics.add(new Graphic(webMercatorUtils.geographicToWebMercator(pt), marker, { 'title': lon + ' ' + lat, 'content': 'A Mapillary Node' }, new InfoTemplate('${title}', '${content}')));
+      this.map.graphics.add(new Graphic(
+        webMercatorUtils.geographicToWebMercator(pt),
+        marker,
+        { 'title': lon + ' ' + lat, 'content': 'A Mapillary Node' },
+        new InfoTemplate('${title}', '${content}')
+      ))
     }
 
-  });
-});
+  })
+})
