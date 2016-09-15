@@ -71,12 +71,9 @@ function (
       this.parentEl = this.mapillary._container.element.parentElement
       this.toggleViewerVisibility(false)
 
-      var layer = new VectorTileLayer(
-        'widgets/Mapillary/sequence-tiles.json',
-        {id: 'mapillarysequences'}
-      )
+      var layers = new VectorTileLayer('widgets/Mapillary/mapillary-style.json')
 
-      this.map.addLayer(layer)
+      this.map.addLayer(layers)
 
       var that = this
 
@@ -84,7 +81,7 @@ function (
       console.log('defaultCoverage = ', this.config.defaultCoverage)
 
       dom.byId('mapillarysequences').checked = this.config.defaultCoverage
-      layer.setVisibility(this.config.defaultCoverage)
+      layers.setVisibility(this.config.defaultCoverage)
 
       // Bind event to map click
       this.map.on('click', function (event) {
@@ -96,7 +93,7 @@ function (
 
       on(dom.byId('mapillarysequences'), 'change', function () {
         var mapillarysequences = dom.byId('mapillarysequences')
-        layer.setVisibility(mapillarysequences.checked)
+        layers.setVisibility(mapillarysequences.checked)
       })
     },
 
