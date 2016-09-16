@@ -86,7 +86,11 @@ function (
       // Bind event to map click
       this.map.on('click', function (event) {
         var mp = webMercatorUtils.webMercatorToGeographic(event.mapPoint)
-        that.mapillary.moveCloseTo(mp.y, mp.x)
+
+        closeToPromise = that.mapillary.moveCloseTo(mp.y, mp.x)
+        closeToPromise.catch(function (err) {
+          alert('We couldn\'t load the data from the map, zoom in to the area that interests you an try clicking again');
+        })
       })
 
       this.mapillary.on('nodechanged', this.onNodeChanged.bind(this))
@@ -125,9 +129,10 @@ function (
     //   console.log('Mapillary::onPositionChange');
     // },
 
-    // resize: function(){
-    //   console.log('Mapillary::resize');
-    // }
+    resize: function(){
+      console.log('Mapillary::resize');
+      this.mapillary.resize()
+    },
 
     // methods to communication between widgets:
     toggleViewerVisibility: function (val) {
@@ -146,6 +151,7 @@ function (
 
       this.map.graphics.clear()
       this.toggleViewerVisibility(true)
+      this.mapillary.resize()
 
       var pt = new Point(lon, lat, new SpatialReference({ 'wkid': 4326 }))
 
