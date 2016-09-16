@@ -86,7 +86,11 @@ function (
       // Bind event to map click
       this.map.on('click', function (event) {
         var mp = webMercatorUtils.webMercatorToGeographic(event.mapPoint)
-        that.mapillary.moveCloseTo(mp.y, mp.x)
+
+        closeToPromise = that.mapillary.moveCloseTo(mp.y, mp.x)
+        closeToPromise.catch(function (err) {
+          alert('We couldn\'t load the data from the map, zoom in to the area that interests you an try clicking again');
+        })
       })
 
       this.mapillary.on('nodechanged', this.onNodeChanged.bind(this))
