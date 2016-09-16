@@ -125,9 +125,10 @@ function (
     //   console.log('Mapillary::onPositionChange');
     // },
 
-    // resize: function(){
-    //   console.log('Mapillary::resize');
-    // }
+    resize: function(){
+      console.log('Mapillary::resize');
+      this.mapillary.resize()
+    },
 
     // methods to communication between widgets:
     toggleViewerVisibility: function (val) {
