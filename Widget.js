@@ -146,6 +146,7 @@ function (
 
       this.map.graphics.clear()
       this.toggleViewerVisibility(true)
+      this.mapillary.resize()
 
       var pt = new Point(lon, lat, new SpatialReference({ 'wkid': 4326 }))
 
