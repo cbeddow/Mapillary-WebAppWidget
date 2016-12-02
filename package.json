@@ -19,5 +19,8 @@
   "homepage": "https://github.com/mapillary/Mapillary-WebAppWidget#readme",
   "devDependencies": {
     "standard": "^6.0.8"
+  },
+  "dependencies": {
+    "mapillary-js": "2.1.0"
   }
 }

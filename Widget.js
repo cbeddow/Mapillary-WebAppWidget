@@ -1,6 +1,6 @@
 /* globals define, esri */
 define([
-  './widgets/Mapillary/mapillary-js.min.js',
+  './widgets/Mapillary/mapillary.min.js',
 
   'dojo/dom',
   'dojo/on',
