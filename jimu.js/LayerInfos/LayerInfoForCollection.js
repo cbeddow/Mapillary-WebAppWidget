@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// Copyright © 2014 Esri. All Rights Reserved.
+// Copyright © 2014 - 2016 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,10 +17,11 @@
 define([
   'dojo/_base/declare',
   'dojo/_base/array',
+  'dojo/_base/lang',
   'esri/graphicsUtils',
   './LayerInfo',
   './LayerInfoFactory'
-], function(declare, array, graphicsUtils, LayerInfo,
+], function(declare, array, lang, graphicsUtils, LayerInfo,
 LayerInfoFactory) {
   return declare(LayerInfo, {
 
@@ -53,33 +54,19 @@ LayerInfoFactory) {
       return extent;
     },
 
-    _resetLayerObjectVisiblityBeforeInit: function() {
-      /* works code for restore at init.
-      // if(this._layerOption) {
-      //   // according to this._layerOption.visible to set this._visible first.
-      //   this._visible = this._layerOption.visible;
-
-      //   // check/unchek all sublayers according to subLayerInfo._layerOption.visible.
-      //   array.forEach(this.newSubLayers, function(subLayerInfo) {
-      //     if(subLayerInfo._layerOption) {
-      //       subLayerInfo._setTopLayerVisible(subLayerInfo._layerOption.visible);
-      //     }
-      //   }, this);
-      // }
-      */
-
-      /***code for resotre not at init***/
-      if(this._layerOption) {
-
-        // check/unchek all sublayers according to subLayerInfo._layerOption.visible.
+    _resetLayerObjectVisiblity: function(layerOptions) {
+      var layerOption  = layerOptions ? layerOptions[this.id]: null;
+      if(layerOption) {
+        // check/unchek all sublayers according to subLayerOption.visible.
         array.forEach(this.newSubLayers, function(subLayerInfo) {
-          if(subLayerInfo._layerOption) {
-            subLayerInfo.layerObject.setVisibility(subLayerInfo._layerOption.visible);
+          var subLayerOption  = layerOptions ? layerOptions[subLayerInfo.id]: null;
+          if(subLayerOption) {
+            subLayerInfo.layerObject.setVisibility(subLayerOption.visible);
           }
         }, this);
 
-        // according to this._layerOption.visible to set this._visible after all sublayers setting.
-        this._setTopLayerVisible(this._layerOption.visible);
+        // according to layerOption.visible to set this._visible after all sublayers setting.
+        this._setTopLayerVisible(layerOption.visible);
       }
     },
 
@@ -131,6 +118,11 @@ LayerInfoFactory) {
       array.forEach(operLayer.featureCollection.layers, function(layerObj) {
         var subLayerInfo;
         if (this._getLayerIndexesInMapByLayerId(layerObj.layerObject.id)) {
+          // prepare for _extraSetLayerInfos.
+          lang.setObject("_wabProperties.originOperLayer.showLegend",
+                         this.originOperLayer.featureCollection.showLegend,
+                         layerObj.layerObject);
+
           subLayerInfo = LayerInfoFactory.getInstance().create({
             layerObject: layerObj.layerObject,
             title: layerObj.layerObject.label ||
@@ -140,7 +132,7 @@ LayerInfoFactory) {
             id: layerObj.id || " ",
             collection: {"layerInfo": this},
             selfType: 'collection',
-            showLegend: layerObj.showLegend, //temporary code for support showLegend.
+            showLegend: this.originOperLayer.featureCollection.showLegend,
             parentLayerInfo: this
           });
 
@@ -189,6 +181,20 @@ LayerInfoFactory) {
       //   return true if 'showLegend' has not been cnfigured in webmp
       return this.originOperLayer.featureCollection.showLegend !== undefined ?
              this.originOperLayer.featureCollection.showLegend : true;
+    },
+
+    getScaleRange: function() {
+      var scaleRange;
+      var subLayers = this.getSubLayers();
+      if(subLayers[0]) {
+        scaleRange = subLayers[0].getScaleRange();
+      } else {
+        scaleRange = {
+          minScale: 0,
+          maxScale: 0
+        };
+      }
+      return scaleRange;
     }
 
   });

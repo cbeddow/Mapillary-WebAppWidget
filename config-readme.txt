@@ -8,6 +8,10 @@
     //This property stores all of the theme's styles. The app displays the first style by default.
     "styles": [],
 
+    "customStyles": {
+      "mainBackgroundColor": ""
+    },
+
     //Optional. It is the theme version.
     "version": "1.1"
   },
@@ -192,6 +196,18 @@
       },
       "center": "",
       "level": 3
+    },
+
+    // Config proxies to replace the premium layer in the map.
+    "appProxy": {
+      // Webmap id
+      "mapItemId": "",
+      "proxyItems": [{
+        "sourceUrl": "",
+        "proxyUrl": "",
+        "proxyId": "",
+        "useProxy": true
+      }]
     }
   },
 
@@ -314,6 +330,14 @@
       "height": 58
     }
   },
+
+  // Config proxies to replace the premium urls used in the app.
+  "appProxies": [{
+    "sourceUrl": "",
+    "proxyUrl": "",
+    "proxyId": "",
+    "useProxy": true
+  }],
 
   /***********************************
    if app is a tempalte or an app create from a template, they will have 'templateConfig' property.

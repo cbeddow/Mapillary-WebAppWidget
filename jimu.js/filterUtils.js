@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// Copyright © 2014 Esri. All Rights Reserved.
+// Copyright © 2014 - 2016 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,8 +24,9 @@ define([
   'jimu/utils'
 ],
 function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) {
+
   //refer arcgisonline/sharing/dijit/dialog/FilterDlg.js
-  return declare([], {
+  var clazz = declare([], {
     _stringFieldType: 'esriFieldTypeString',
     _dateFieldType: 'esriFieldTypeDate',
     _numberFieldTypes: ['esriFieldTypeOID',
@@ -235,11 +236,8 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
     /****  stringify                               ****/
     /**************************************************/
     //builtCompleteFilter
-    //1. If return null, it means partsObj is not invalid because some part is null.
-    //2. If return Object but the expr property is empty, it means 'Ask for values' option
-    //is checked and some values are missing, so it can't build a filter string.
-    //3. If return Object and the expr property is not null,
-    //   it means it builds a valid filter string.
+    //1. If return null or empty string, it means we can't get a valid sql expresion
+    //2. If return a non-empty string, it means we can get a valid sql expression
     getExprByFilterObj: function(partsObj) {
       //check part if valid or not, if part is null, it is invalid
       var isValidParts = array.every(partsObj.parts, function(part){
@@ -373,7 +371,35 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
       return filterString;
     },
 
+    _preBuiltSingleFilterString: function(part){
+      if(part.fieldObj.shortType === 'string' && part.valueObj.value === "<Null>"){
+        if(part.operator === this.OPERATORS.stringOperatorIs){
+          return {
+            whereClause: part.fieldObj.name + " IS NULL"
+          };
+        }else if(part.operator === this.OPERATORS.stringOperatorIsNot){
+          return {
+            whereClause: part.fieldObj.name + " IS NOT NULL"
+          };
+        }
+      }
+
+      if(part.fieldObj.shortType === 'number' && part.valueObj.value === "<Null>"){
+        if(part.operator === this.OPERATORS.numberOperatorIs){
+          return {
+            whereClause: part.fieldObj.name + " IS NULL"
+          };
+        }else if(part.operator === this.OPERATORS.numberOperatorIsNot){
+          return {
+            whereClause: part.fieldObj.name + " IS NOT NULL"
+          };
+        }
+      }
+      return null;
+    },
+
     builtSingleFilterString: function(part, parameterizeCount) {
+
       if(this.isHosted){
         part.caseSensitive = false;
       }
@@ -382,6 +408,11 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
         return {
           whereClause: null
         };
+      }
+
+      var preBuildResult = this._preBuiltSingleFilterString(part);
+      if(preBuildResult){
+        return preBuildResult;
       }
 
       var value = part.valueObj.value;
@@ -857,7 +888,15 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
 
       if (savedStrings.length) {
         // put the strings back in
-        var replace = function(part, savedStrings){
+        var replace = function (part, savedStrings) {
+          if (part.valueObj === undefined ||
+            part.valueObj === null) {
+            return false;
+          }
+          if (part.valueObj.value === undefined ||
+            part.valueObj.value === null) {
+            return false;
+          }
           if (part.fieldObj.shortType !== "string") {
             return false;
           }
@@ -1074,6 +1113,20 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
       return part;
     },
 
+    _removeOperator: function(shortType, str, operatorSize) {
+      //PR 8530
+      var timestamp = "timestamp ";
+      str = str.substring(operatorSize).trim();  // remove operator
+
+      // Remove "timestamp" flag for non-hosted sources
+      if (shortType === "date" && !this.isHosted && str.toLowerCase().startsWith(timestamp)) {
+        // timestamp '2014-01-01'
+        str = str.substring(timestamp.length).trim();
+      }
+
+      return str;
+    },
+
     parseSingleExpr: function(part){
       //code for wab, try handle with case sensitive
       //samples: {expr: "UPPER(CITY_NAME) LIKE UPPER('%#0#%')"}
@@ -1109,13 +1162,7 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
       var lStr = str.toLowerCase();
 
       if (lStr.startsWith("= ")) {
-
-        if (part.fieldObj.shortType === "date" && !this.isHosted) {
-          // = timestamp '20014-01-01'
-          str = str.substring(12).trim();
-        } else {
-          str = str.substring(2).trim();
-        }
+        str = this._removeOperator(part.fieldObj.shortType, str, "= ".length);
 
         this.storeValue(str, part);//this.storeValue(str.substring(2).trim(), part);
         if (part.fieldObj.shortType === "date") {
@@ -1127,12 +1174,7 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
         }
 
       } else if (lStr.startsWith("< ")) {
-        if (part.fieldObj.shortType === "date" && !this.isHosted) {
-          // < timestamp '20014-01-01'
-          str = str.substring(12).trim();
-        } else {
-          str = str.substring(2).trim();
-        }
+        str = this._removeOperator(part.fieldObj.shortType, str, "< ".length);
 
         this.storeValue(str, part);//this.storeValue(str.substring(2).trim(), part);
         if (part.fieldObj.shortType === "date") {
@@ -1147,12 +1189,7 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
         }
 
       } else if (lStr.startsWith("> ")) {
-        if (part.fieldObj.shortType === "date" && !this.isHosted) {
-          // > timestamp '20014-01-01'
-          str = str.substring(12).trim();
-        } else {
-          str = str.substring(2).trim();
-        }
+        str = this._removeOperator(part.fieldObj.shortType, str, "> ".length);
 
         this.storeValue(str, part);//this.storeValue(str.substring(2).trim(), part);
         if (part.fieldObj.shortType === "date") {
@@ -1167,12 +1204,7 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
         }
 
       } else if (lStr.startsWith("<> ")) {
-        if (part.fieldObj.shortType === "date" && !this.isHosted) {
-          // <> timestamp '20014-01-01'
-          str = str.substring(13).trim();
-        } else {
-          str = str.substring(3).trim();
-        }
+        str = this._removeOperator(part.fieldObj.shortType, str, "<> ".length);
 
         this.storeValue(str, part);//this.storeValue(str.substring(3).trim(), part);
         if (part.fieldObj.shortType === "date") {
@@ -1235,19 +1267,13 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
         }
 
       } else if (lStr.startsWith("between ")) {
-
-        if (part.fieldObj.shortType === "date" && !this.isHosted) {
-          // between timestamp '20014-01-01'
-          str = str.substring(18).trim();
-        } else {
-          str = str.substring(8).trim();
-        }
+        str = this._removeOperator(part.fieldObj.shortType, str, "between ".length);
 
         pos = str.toLowerCase().indexOf(" and ");
         if (pos > -1) {
           this.storeValue1(str.substring(0, pos).trim(), part);
           if (part.fieldObj.shortType === "date" && !this.isHosted) {
-            //  between timestamp '20014-01-01' and date '20014-01-01'
+            //  between timestamp '2014-01-01' and date '2014-01-01'
             this.storeValue2(str.substring(pos + 15).trim(), part);
           } else {
             this.storeValue2(str.substring(pos + 5).trim(), part);
@@ -1282,19 +1308,13 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
         }
 
       } else if (lStr.startsWith("not between ")) {
-
-        if (part.fieldObj.shortType === "date" && !this.isHosted) {
-          // not between timestamp '20014-01-01'
-          str = str.substring(22).trim();
-        } else {
-          str = str.substring(12).trim();
-        }
+        str = this._removeOperator(part.fieldObj.shortType, str, "not between ".length);
 
         pos = str.toLowerCase().indexOf(" and ");
         if (pos > -1) {
           this.storeValue1(str.substring(0, pos).trim(), part);
           if (part.fieldObj.shortType === "date" && !this.isHosted) {
-            // not between timestamp '20014-01-01' and timestamp '20014-01-01'
+            // not between timestamp '2014-01-01' and timestamp '2014-01-01'
             this.storeValue2(str.substring(pos + 15).trim(), part);
           } else {
             this.storeValue2(str.substring(pos + 5).trim(), part);
@@ -1528,4 +1548,6 @@ function(declare, lang, array, locale, esriLang, ItemFileWriteStore, jimuUtils) 
       return date;
     }
   });
+
+  return clazz;
 });

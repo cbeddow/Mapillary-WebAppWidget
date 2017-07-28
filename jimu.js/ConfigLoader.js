@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////
-// Copyright © 2014 Esri. All Rights Reserved.
+// Copyright © 2014 - 2016 Esri. All Rights Reserved.
 //
 // Licensed under the Apache License Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -96,16 +96,10 @@ function (declare, lang, array, html, dojoConfig, cookie,
 
         if(this.urlParams.id){
           return this.loadWidgetsManifest(appConfig).then(lang.hitch(this, function() {
-            return this._upgradeAllWidgetsConfig(appConfig);
+            return this.loadAndUpgradeAllWidgetsConfig(appConfig);
           })).then(lang.hitch(this, function() {
             this._configLoaded = true;
-            if(appConfig.title){
-              if(window.isBuilder){
-                document.title = appConfig.title + ' - Web AppBuilder for ArcGIS';
-              }else{
-                document.title = appConfig.title;
-              }
-            }
+            this._setDocumentTitle(appConfig);
             return this.getAppConfig();
           }));
         }else{
@@ -177,19 +171,31 @@ function (declare, lang, array, html, dojoConfig, cookie,
             }else {
               return appConfig;
             }
-          })).then(lang.hitch(this, function() {
-            return this._upgradeAllWidgetsConfig(appConfig);
-          })).then(lang.hitch(this, function() {
+          })).then(lang.hitch(this, function(appConfig) {
+            return this.loadAndUpgradeAllWidgetsConfig(appConfig);
+          })).then(lang.hitch(this, function(appConfig) {
             this._configLoaded = true;
-            if(appConfig.title){
-              document.title = appConfig.title;
-            }
+            this._setDocumentTitle(appConfig);
             return this.getAppConfig();
           }));
         }
       }), lang.hitch(this, function(err){
         this.showError(err);
+        //we still return a rejected deferred
+        var def = new Deferred();
+        def.reject(err);
+        return def;
       }));
+    },
+
+    _setDocumentTitle: function(appConfig) {
+      if(!window.isBuilder) {
+        //launch
+        if (appConfig && appConfig.title) {
+          document.title = jimuUtils.stripHTML(appConfig.title);
+        }
+      }
+      //startup\Plugin.js change doc.title when in config mode.
     },
 
     getAppConfig: function(){
@@ -249,7 +255,6 @@ function (declare, lang, array, html, dojoConfig, cookie,
     addNeedValues: function(appConfig){
       this._processNoUriWidgets(appConfig);
       this._addElementId(appConfig);
-      this._processWidgetJsons(appConfig);
     },
 
     showError: function(err){
@@ -263,7 +268,7 @@ function (declare, lang, array, html, dojoConfig, cookie,
 
     _tryLoadConfig: function() {
       if(this.urlParams.id === 'stemapp'){
-        this.urlParams.config = window.path + 'config.json';
+        this.urlParams.config = window.appInfo.appPath + 'config.json';
         delete this.urlParams.id;
       }
       if(this.urlParams.config) {
@@ -275,6 +280,9 @@ function (declare, lang, array, html, dojoConfig, cookie,
           }
         }).then(lang.hitch(this, function(appConfig){
           tokenUtils.setPortalUrl(appConfig.portalUrl);
+          if(appConfig.portalUrl){
+            window.portalUrl = appConfig.portalUrl;
+          }
 
           if(this.urlParams.token){
             return tokenUtils.registerToken(this.urlParams.token).then(function(){
@@ -290,6 +298,7 @@ function (declare, lang, array, html, dojoConfig, cookie,
         var portalUrl = portalUrlUtils.getPortalUrlFromLocation();
         var def = new Deferred();
         tokenUtils.setPortalUrl(portalUrl);
+        window.portalUrl = portalUrl;
         arcgisUtils.arcgisUrl = portalUrlUtils.getBaseItemUrl(portalUrl);
 
         var tokenDef;
@@ -333,7 +342,9 @@ function (declare, lang, array, html, dojoConfig, cookie,
         this.configFile = "config.json";
         return xhr(this.configFile, {handleAs: 'json'}).then(lang.hitch(this, function(appConfig){
           tokenUtils.setPortalUrl(appConfig.portalUrl);
-
+          if(appConfig.portalUrl){
+            window.portalUrl = appConfig.portalUrl;
+          }
           if(this.urlParams.token){
             return tokenUtils.registerToken(this.urlParams.token).then(function(){
               return appConfig;
@@ -350,6 +361,9 @@ function (declare, lang, array, html, dojoConfig, cookie,
       var configVersion = appConfig.wabVersion;
       var newConfig;
 
+      //save wabVersion in app config json here
+      appConfig.configWabVersion = appConfig.wabVersion;
+
       if(appVersion === configVersion){
         return appConfig;
       }
@@ -360,31 +374,19 @@ function (declare, lang, array, html, dojoConfig, cookie,
       }else{
         newConfig = this.versionManager.upgrade(appConfig, configVersion, appVersion);
         newConfig.wabVersion = appVersion;
-        newConfig.isUpgraded = true;
         return newConfig;
       }
     },
 
-    _upgradeAllWidgetsConfig: function(appConfig){
+    loadAndUpgradeAllWidgetsConfig: function(appConfig){
       var def = new Deferred(), defs = [];
-      if(!appConfig.isUpgraded){
-        //app is latest, all widgets are lastest.
-        def.resolve(appConfig);
-        return def;
-      }
 
-      delete appConfig.isUpgraded;
       sharedUtils.visitElement(appConfig, lang.hitch(this, function(e){
         if(!e.uri){
           return;
         }
-        if(e.config){
-          //if widget is configured, let's upgrade it
-          var upgradeDef = this.widgetManager.tryLoadWidgetConfig(e);
-          defs.push(upgradeDef);
-        }else{
-          e.version = e.manifest.version;
-        }
+        var upgradeDef = this.widgetManager.tryLoadWidgetConfig(e);
+        defs.push(upgradeDef);
       }));
       all(defs).then(lang.hitch(this, function(){
         def.resolve(appConfig);
@@ -441,7 +443,7 @@ function (declare, lang, array, html, dojoConfig, cookie,
     _processWidgetJsons: function(appConfig){
       sharedUtils.visitElement(appConfig, function(e, info){
         if(info.isWidget && e.uri){
-          jimuUtils.processWidgetSetting(e);
+          jimuUtils.widgetJson.processWidgetJson(e);
         }
       });
     },
@@ -677,7 +679,7 @@ function (declare, lang, array, html, dojoConfig, cookie,
         }));
       }else{
         if (!tokenUtils.isInBuilderWindow() && !tokenUtils.isInConfigOrPreviewWindow() &&
-          this.portalSelf.supportsOAuth && this.rawAppConfig.appId && !isWebTier) {
+          this.portalSelf.supportsOAuth && this.rawAppConfig && this.rawAppConfig.appId && !isWebTier) {
           tokenUtils.registerOAuthInfo(portalUrl, this.rawAppConfig.appId);
         }
         //we call checkSignInStatus here because this is the first place where we can get portal url
@@ -796,8 +798,8 @@ function (declare, lang, array, html, dojoConfig, cookie,
           sharedUtils.visitElement(config, lang.hitch(this, function(e){
             if(!e.widgets && e.uri){
               if(manifests[e.uri]){
-                this._addNeedValuesForManifest(manifests[e.uri]);
-                jimuUtils.addManifest2WidgetJson(e, manifests[e.uri]);
+                this._addNeedValuesForManifest(manifests[e.uri], e.uri);
+                jimuUtils.widgetJson.addManifest2WidgetJson(e, manifests[e.uri]);
               }else{
                 defs.push(this.widgetManager.loadWidgetManifest(e));
               }
@@ -810,7 +812,7 @@ function (declare, lang, array, html, dojoConfig, cookie,
       }else{
         sharedUtils.visitElement(config, lang.hitch(this, function(e){
           if(!e.widgets && e.uri){
-            defs.push(this.widgetManager.loadWidgetManifest(e));
+            defs.push(loadWidgetManifest(this.widgetManager, e));
           }
         }));
         all(defs).then(function(){
@@ -818,17 +820,75 @@ function (declare, lang, array, html, dojoConfig, cookie,
         });
       }
 
+      function loadWidgetManifest(widgetManager, e){
+        return widgetManager.loadWidgetManifest(e).then(function(manifest){
+          return manifest;
+        }, function(err){
+          console.log('Widget failed to load, it is removed.', e.name);
+
+          if(err.stack){
+            console.error(err.stack);
+          }else{
+            //TODO err.code === 400, err.code === 403
+            console.log(err);
+          }
+          deleteUnloadedWidgets(config, e);
+        });
+      }
+
+      function deleteUnloadedWidgets(config, e){
+          //if has e, delete a specific widget
+          //if has no e, delete all unloaded widget
+          deleteInSection('widgetOnScreen');
+          deleteInSection('widgetPool');
+
+          function deleteInSection(section){
+            if(config[section] && config[section].widgets){
+              config[section].widgets = config[section].widgets.filter(function(w){
+                if(e){
+                  return w.id !== e.id;
+                }else{
+                  if(w.uri && !w.manifest){
+                    console.error('Widget is removed because it is not loaded successfully.', w.uri);
+                  }
+                  return w.manifest;
+                }
+              });
+            }
+            if(config[section] && config[section].groups){
+              config[section].groups.forEach(function(g){
+                if(g.widgets){
+                  g.widgets = g.widgets.filter(function(w){
+                    if(e){
+                      return w.id !== e.id;
+                    }else{
+                      if(w.uri && !w.manifest){
+                        console.error('Widget is removed because it is not loaded successfully.', w.uri);
+                      }
+                      return w.manifest;
+                    }
+                  });
+                }
+              });
+            }
+          }
+        }
+
       setTimeout(function(){
+        //delete problem widgets to avoid one widget crash app
         if(!def.isResolved()){
+          deleteUnloadedWidgets(config);
           def.resolve(config);
         }
       }, 60 * 1000);
       return def;
     },
 
-    _addNeedValuesForManifest: function(manifest){
-      jimuUtils.addManifestProperies(manifest);
-      jimuUtils.processManifestLabel(manifest, dojoConfig.locale);
+    _addNeedValuesForManifest: function(manifest, uri){
+      lang.mixin(manifest, jimuUtils.getUriInfo(uri));
+
+      jimuUtils.manifest.addManifestProperies(manifest);
+      jimuUtils.manifest.processManifestLabel(manifest, dojoConfig.locale);
     },
 
     _loadMergedWidgetManifests: function(){

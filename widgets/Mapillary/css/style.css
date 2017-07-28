@@ -1,4 +1,4 @@
-@import url("//unpkg.com/mapillary-js@1.7.1/dist/mapillary-js.min.css");
+@import url("../lib/mapillary-js/mapillary.min.css");
 
 /* add additional custom styles */
 
@@ -52,6 +52,7 @@
 
 .Notice {
    display: none;
+    height: 247px;
 }
 
 .hide-viewer-content .Notice {

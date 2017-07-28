@@ -3,24 +3,25 @@
     "sources": {
         "mapillary-source": {
             "tiles": [
-                "http://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt"
+                "https://d25uarhxywzl1j.cloudfront.net/v0.1/{z}/{x}/{y}.mvt"
             ],
             "type": "vector",
             "minzoom": 0
         }
     },
+    "sprite": "widgets/Mapillary/images/sprites",
     "layers": [
         {
             "id": "mapillary-dots",
-            "type": "circle",
+            "type": "symbol",
             "source": "mapillary-source",
             "source-layer": "mapillary-images",
             "interactive": true,
             "minzoom": 14,
-            "paint": {
-                "circle-color": "#39AF64",
-                "circle-opacity": 0.6,
-                "circle-radius": 6
+            "layout": {
+                "icon-image": "dot-0",
+                "icon-allow-overlap": true,
+                "symbol-avoid-edges": true
             }
         },
         {
@@ -44,14 +45,14 @@
         },
         {
             "id": "mapillary-overview",
-            "type": "circle",
+            "type": "symbol",
             "source": "mapillary-source",
             "source-layer": "mapillary-sequence-overview",
             "maxzoom": 6,
-            "paint": {
-                "circle-radius": 4,
-                "circle-opacity": 0.6,
-                "circle-color": "#39AF64"
+            "layout": {
+                "icon-image": "dot-0",
+                "icon-allow-overlap": true,
+                "symbol-avoid-edges": true
             }
         }
     ]

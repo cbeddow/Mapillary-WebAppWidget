@@ -115,6 +115,12 @@ var ie = (function() {
         name: "dgrid",
         location: window.apiUrl + "dgrid"
       }, {
+        name: "dgrid1",
+        location: window.apiUrl + "dgrid1"
+      }, {
+        name: "dstore",
+        location: window.apiUrl + "dstore"
+      }, {
         name: "moment",
         location: window.apiUrl + "moment"
       }, {
@@ -188,9 +194,14 @@ var ie = (function() {
 
         _loadPolyfills("", function() {
           window.appInfo.appPath = window.path;
-          require(['jimu/main', 'libs/main', 'dynamic-modules/preload'], function(jimuMain) {
-            //loadingCallback('jimu', resources.length + 1, resources.length);
-            jimuMain.initApp();
+          window.avoidRequireCache(require);
+          require(['dojo/aspect', 'dojo/request/util'], function(aspect, requestUtil) {
+            window.avoidRequestCache(aspect, requestUtil);
+
+            require(['jimu/main', 'libs/main'], function(jimuMain) {
+              //loadingCallback('jimu', resources.length + 1, resources.length);
+              jimuMain.initApp();
+            });
           });
         });
       }
