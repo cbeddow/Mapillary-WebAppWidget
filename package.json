@@ -21,6 +21,6 @@
     "standard": "^6.0.8"
   },
   "dependencies": {
-    "mapillary-js": "2.1.0"
+    "mapillary-js": "2.5.1"
   }
 }
