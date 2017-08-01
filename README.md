@@ -14,8 +14,4 @@ There is also a [deploy custom widget guide](https://developers.arcgis.com/web-a
 
 ## Plans and pricing
 
-You can [check this site](http://www.mapillary.com/solutions.html) for more informaton but you should know that: 
-
-* All plans come with a 30-day trial
-* It's free for personal, non-profit and educational use.
-* The use of this widget is also free of charge for developing and testing purposes.
+This widget is a free tool, but can be updated to a premium version with editing capabilities. Visit [https://www.mapillary.com/arcgis](https://www.mapillary.com/arcgis) for more informaton on Mapillary for ArcGIS products.
