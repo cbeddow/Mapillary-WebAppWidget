@@ -1,4 +1,4 @@
-# Mapillary-WebAppWidget
+# Mapillary Widget for Web AppBuilder (Free & View-only)
 
 A [Mapillary](http://www.mapillary.com/) widget for use in [Web AppBuilder Developer Edition](https://developers.arcgis.com/web-appbuilder/). 
 
